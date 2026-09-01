@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>WINTER ARC · 120 day protocol</title>
+  <!-- Tailwind CDN + black & white theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    body { background: #ffffff; }
+    .bg-card { background: #ffffff; }
+    .bw-border { border-color: #000000; }
+    .bw-glow { box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); }
+    .progress-track { background: #e5e7eb; height: 12px; border-radius: 999px; }
+    .progress-fill { transition: width 0.5s ease; background: #000000; }
+    .check-item { transition: all 0.2s ease; background: #f9fafb; border: 1px solid #d1d5db; }
+    .check-item.checked { opacity: 0.7; background: #e5e7eb; }
+    .check-item.checked .check-box { background: #000000; border-color: #000000; }
+    .check-box {
+      width: 24px; height: 24px; border-radius: 8px; border: 2px solid #9ca3af;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 20px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #000000; border-radius: 20px; }
+    input[type="range"] { accent-color: #000000; }
+    input, textarea { background: #f9fafb; }
+    .workout-table-header { background: #000000; color: #ffffff; }
+    .workout-row:hover { background: #f9fafb; }
+  </style>
+</head>
+<body class="text-gray-900 antialiased min-h-screen flex flex-col items-center py-6 px-4">
+
+  <!-- main container -->
+  <main class="w-full max-w-7xl mx-auto space-y-8">
+    
+    <!-- HEADER & WINTER ARC TITLE -->
+    <header class="text-center mt-4">
+      <h1 class="text-5xl md:text-7xl font-extrabold tracking-widest text-black drop-shadow-sm">WINTER ARC</h1>
+      <p class="text-sm uppercase tracking-[0.3em] text-gray-600 mt-2">120-day night-shift protocol · 115kg → 90kg</p>
+    </header>
+
+    <!-- DASHBOARD SUMMARY CARD -->
+    <section class="bg-white border-2 border-black rounded-3xl p-6 md:p-8 shadow-xl bw-glow">
+      <div class="grid md:grid-cols-2 gap-8 items-center">
+        <div>
+          <div class="flex items-end justify-between">
+            <span class="text-sm font-bold text-gray-700">DAY</span>
+            <span class="text-6xl md:text-7xl font-black text-black leading-none" id="dayCounter">1</span>
+            <span class="text-2xl font-light text-gray-500">/120</span>
+          </div>
+          <div class="progress-track mt-4">
+            <div id="dayProgressBar" class="progress-fill h-full rounded-full" style="width: 1%;"></div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2 tracking-wider" id="dayProgressText">0.8% complete</p>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-bold text-gray-700">WEIGHT GOAL</span>
+            <span class="text-lg font-bold text-black">115kg → 90kg</span>
+          </div>
+          <div class="relative h-16 bg-gray-50 rounded-2xl border-2 border-gray-300 overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1/3 bg-gray-200 flex items-center justify-center text-xs text-gray-600">start 115</div>
+            <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gray-100 flex items-center justify-center text-xs text-gray-600">target 90</div>
+            <div id="weightTrendMarker" class="absolute top-1/2 -translate-y-1/2 left-4 text-xs bg-white border-2 border-black rounded-full px-3 py-1 text-black shadow">115 kg</div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-2 text-[10px] uppercase tracking-wide text-gray-500">
+            <span>115 kg</span><span class="text-center">-25kg</span><span class="text-right">90 kg</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TWO COLUMN LAYOUT: SCHEDULE + METRICS/HISTORY -->
+    <div class="grid lg:grid-cols-5 gap-6">
+      
+      <!-- DAILY SCHEDULE CHECKLIST (left, wider) -->
+      <section class="lg:col-span-3 bg-white border-2 border-black rounded-3xl p-5 md:p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-black tracking-wide">⚡ NIGHT-SHIFT CHECKLIST</h2>
+          <span id="completionBadge" class="text-xs bg-gray-100 px-3 py-1 rounded-full border-2 border-gray-300 text-black font-bold">0/10 done</span>
+        </div>
+        <div id="scheduleList" class="space-y-2 max-h-[480px] overflow-y-auto pr-1 custom-scroll">
+          <!-- JS injected checklist items -->
+        </div>
+        <div class="mt-5 flex gap-3">
+          <button id="resetDayBtn" class="text-xs bg-white hover:bg-gray-100 px-4 py-2 rounded-xl transition border-2 border-black text-black font-semibold">reset day</button>
+          <span class="text-[10px] text-gray-500 self-center">click box to toggle</span>
+        </div>
+
+        <!-- WORKOUT CIRCUIT TABLE -->
+        <div class="mt-6 border-t-2 border-black pt-4">
+          <h3 class="text-lg font-bold text-black mb-3">🏋️ 300-CALORIE WINTER ARC CIRCUIT</h3>
+          <p class="text-xs text-gray-600 mb-2">Complete 4 rounds · 45 seconds per exercise · rest 60-90 sec between rounds</p>
+          <div class="overflow-x-auto custom-scroll">
+            <table class="w-full text-xs border-collapse bg-gray-50 rounded-xl">
+              <thead>
+                <tr class="workout-table-header">
+                  <th class="p-2 text-left border-b border-black">Done</th>
+                  <th class="p-2 text-left border-b border-black">Exercise</th>
+                  <th class="p-2 text-left border-b border-black">Target Reps</th>
+                  <th class="p-2 text-left border-b border-black">Time Count</th>
+                  <th class="p-2 text-left border-b border-black">Focus Area</th>
+                </tr>
+              </thead>
+              <tbody id="workoutTableBody">
+                <!-- JS injected workout rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDE: METRICS FORM + HISTORY -->
+      <div class="lg:col-span-2 flex flex-col gap-6">
+        <!-- DAILY METRICS LOGGING -->
+        <section class="bg-white border-2 border-black rounded-3xl p-5 shadow-xl">
+          <h2 class="text-lg font-bold text-black flex items-center gap-2">📊 DAILY LOG</h2>
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-3">before 6:00am sleep</p>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-gray-700 font-semibold block mb-1">Today's weight (kg)</label>
+              <input type="number" id="weightInput" step="0.1" min="70" max="130" placeholder="115.0" 
+                     class="w-full bg-gray-50 border-2 border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/40 text-gray-900">
+            </div>
+            <div>
+              <label class="text-xs text-gray-700 font-semibold block mb-1">Energy level (1-10) <span id="energyValue" class="text-black font-bold">5</span></label>
+              <input type="range" id="energySlider" min="1" max="10" value="5" step="1" class="w-full cursor-pointer">
+            </div>
+            <div>
+              <label class="text-xs text-gray-700 font-semibold block mb-1">Reflections / hurdles</label>
+              <textarea id="reflectionInput" rows="2" placeholder="short note..." 
+                        class="w-full bg-gray-50 border-2 border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/40 text-gray-900 resize-none"></textarea>
+            </div>
+            <button id="saveEntryBtn" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-2.5 rounded-xl transition shadow-md text-sm tracking-wide">
+              ❄️ SAVE TODAY'S ENTRY
+            </button>
+          </div>
+        </section>
+
+        <!-- HISTORY / LOG VIEW -->
+        <section class="bg-white border-2 border-black rounded-3xl p-5 shadow-xl flex-1 flex flex-col">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-black">📜 HISTORY</h2>
+            <span id="logCount" class="text-xs bg-gray-100 px-2 py-1 rounded-full border-2 border-gray-300 text-black font-bold">0 logs</span>
+          </div>
+          <div id="historyContainer" class="mt-3 overflow-y-auto max-h-64 custom-scroll space-y-2 pr-1">
+            <!-- dynamic history items -->
+          </div>
+          <p id="emptyHistoryMsg" class="text-xs text-gray-500 mt-2 italic">No entries yet. Save your first day.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-8 text-xs text-gray-500 text-center">WINTER ARC · nightshift discipline · 1700 kcal protocol</footer>
+
+  <script>
+    (function() {
+      // ---------- CONSTANTS & STATE ----------
+      const TOTAL_DAYS = 120;
+      const START_WEIGHT = 115;
+      const GOAL_WEIGHT = 90;
+      
+      // SCHEDULE ITEMS
+      const SCHEDULE_ITEMS = [
+        { time: '12:00 PM', task: 'Wake up: drink Apple Cider Vinegar first thing (1 glass water + ACV)' },
+        { time: '12:30 PM – 1:00 PM', task: 'WORKOUT: 300-calorie circuit (see table below)' },
+        { time: '2:00 PM', task: 'MEAL 1: 2 boiled eggs, 100g curd, 1 apple' },
+        { time: '3:00 PM – 3:30 PM', task: 'WALKING SESSION (moderate pace)' },
+        { time: '3:30 PM – 5:30 PM', task: 'Coffee + Herbal teas (between meal 1 & 2)' },
+        { time: '5:30 PM – 6:00 PM', task: 'WALKING SESSION (brisk, maintain steps)' },
+        { time: '7:00 PM', task: 'MEAL 2: 300g boiled beef, 50g curd, 150g veggies, 150g boiled potatoes' },
+        { time: '3:00 AM – 3:30 AM', task: 'WALKING SESSION (short walk + steps)' },
+        { time: '4:00 AM', task: 'MEAL 3: 300g boiled beef, 50g curd, 150g veggies, 150g boiled potatoes' },
+        { time: '6:00 AM', task: 'Eat Apple and Banana before sleep, then sleep 6 hours' }
+      ];
+
+      // WORKOUT CIRCUIT ITEMS
+      const WORKOUT_ITEMS = [
+        { done: false, name: '1. Hybrid Jacks', reps: '40 Total (20 Step, 20 Jump)', time: '45 seconds', focus: 'Cardio' },
+        { done: false, name: '2. Controlled Mountain Climbers', reps: '20 Total (10 per leg)', time: '45 seconds', focus: 'Core / Shoulders' },
+        { done: false, name: '3. Incline Push-Ups', reps: '15 Total', time: '45 seconds', focus: 'Chest / Arms' },
+        { done: false, name: '4. Glute Bridges', reps: '20 Total (2-sec squeeze)', time: '45 seconds', focus: 'Lower Body / Glutes' },
+        { done: false, name: '5. Shadow Boxing', reps: '100 Total (50 per arm)', time: '45 seconds', focus: 'Cardio / Arms' },
+        { done: false, name: '6. Power Marches', reps: '40 Total (20 per leg)', time: '45 seconds', focus: 'Cardio / Core' },
+        { done: false, name: '7. Bodyweight Good Mornings', reps: '15 Total', time: '45 seconds', focus: 'Hamstrings / Back' },
+        { done: false, name: '8. Plank Shoulder Taps', reps: '20 Total (10 per side)', time: '45 seconds', focus: 'Core / Stability' },
+        { done: false, name: '9. Standing Bicycle Crunches', reps: '30 Total (15 per side)', time: '45 seconds', focus: 'Core / Obliques' },
+        { done: false, name: '10. Speed Skater Steps', reps: '30 Total (15 per side)', time: '45 seconds', focus: 'Cardio / Agility' },
+        { done: false, name: 'ROUND COMPLETE', reps: '---', time: 'Rest 60-90 sec', focus: 'Recovery' }
+      ];
+      
+      const defaultState = {
+        currentDay: 1,
+        checklist: {},
+        workoutChecklist: {},
+        logs: [],
+      };
+      
+      let state;
+      
+      function loadState() {
+        const saved = localStorage.getItem('winterArcState_v5_bw');
+        if (saved) {
+          try {
+            state = JSON.parse(saved);
+            if (!state.checklist) state.checklist = {};
+            if (!state.workoutChecklist) state.workoutChecklist = {};
+            if (!state.logs || !Array.isArray(state.logs)) state.logs = [];
+            if (!state.currentDay || isNaN(state.currentDay)) state.currentDay = 1;
+          } catch (e) {
+            state = JSON.parse(JSON.stringify(defaultState));
+          }
+        } else {
+          state = JSON.parse(JSON.stringify(defaultState));
+        }
+        if (state.currentDay > TOTAL_DAYS) state.currentDay = TOTAL_DAYS;
+        if (state.currentDay < 1) state.currentDay = 1;
+      }
+      
+      function persistState() {
+        localStorage.setItem('winterArcState_v5_bw', JSON.stringify(state));
+      }
+      
+      function getChecklistForDay(day) {
+        if (!state.checklist[day]) {
+          state.checklist[day] = new Array(SCHEDULE_ITEMS.length).fill(false);
+        }
+        return state.checklist[day];
+      }
+      
+      function getWorkoutChecklistForDay(day) {
+        if (!state.workoutChecklist[day]) {
+          state.workoutChecklist[day] = new Array(WORKOUT_ITEMS.length).fill(false);
+        }
+        return state.workoutChecklist[day];
+      }
+      
+      function updateDayCounterAndProgress() {
+        const day = state.currentDay;
+        document.getElementById('dayCounter').textContent = day;
+        const progressPercent = Math.min(100, (day / TOTAL_DAYS) * 100);
+        document.getElementById('dayProgressBar').style.width = `${progressPercent}%`;
+        document.getElementById('dayProgressText').textContent = `${progressPercent.toFixed(1)}% complete`;
+      }
+      
+      function updateWeightTracker() {
+        let latestWeight = START_WEIGHT;
+        if (state.logs.length > 0) {
+          const lastLog = state.logs[state.logs.length - 1];
+          if (lastLog.weight && !isNaN(lastLog.weight)) latestWeight = lastLog.weight;
+        }
+        document.getElementById('weightTrendMarker').textContent = `${latestWeight} kg`;
+      }
+      
+      function renderChecklist() {
+        const container = document.getElementById('scheduleList');
+        const checklist = getChecklistForDay(state.currentDay);
+        let completedCount = 0;
+        
+        container.innerHTML = SCHEDULE_ITEMS.map((item, index) => {
+          const isChecked = checklist[index];
+          if (isChecked) completedCount++;
+          return `
+            <div class="check-item flex items-center gap-3 rounded-xl px-3 py-2.5 ${isChecked ? 'checked' : ''}" data-index="${index}">
+              <div class="check-box cursor-pointer flex-shrink-0" data-index="${index}">
+                ${isChecked ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>` : ''}
+              </div>
+              <div class="flex-1 min-w-0">
+                <span class="text-[10px] font-bold text-gray-700 tracking-wider block">${item.time}</span>
+                <p class="text-xs text-gray-900 leading-tight ${isChecked ? 'line-through text-gray-500' : ''}">${item.task}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        document.getElementById('completionBadge').textContent = `${completedCount}/${SCHEDULE_ITEMS.length} done`;
+        
+        document.querySelectorAll('.check-box').forEach(box => {
+          box.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(box.dataset.index, 10);
+            toggleChecklistItem(index);
+          });
+        });
+      }
+      
+      function toggleChecklistItem(index) {
+        const checklist = getChecklistForDay(state.currentDay);
+        checklist[index] = !checklist[index];
+        persistState();
+        renderChecklist();
+      }
+      
+      function renderWorkoutTable() {
+        const tbody = document.getElementById('workoutTableBody');
+        const workoutChecklist = getWorkoutChecklistForDay(state.currentDay);
+        
+        tbody.innerHTML = WORKOUT_ITEMS.map((item, index) => {
+          const isChecked = workoutChecklist[index];
+          return `
+            <tr class="border-b border-gray-200 workout-row transition ${isChecked ? 'bg-gray-200' : ''}">
+              <td class="p-2 text-center">
+                <button class="workout-toggle w-6 h-6 rounded-md border-2 transition flex items-center justify-center ${isChecked ? 'bg-black border-black text-white' : 'border-gray-400 bg-white text-transparent'}" data-index="${index}">
+                  ${isChecked ? '✓' : ''}
+                </button>
+              </td>
+              <td class="p-2 font-medium ${isChecked ? 'line-through text-gray-500' : 'text-gray-900'}">${item.name}</td>
+              <td class="p-2 text-gray-700">${item.reps}</td>
+              <td class="p-2 text-gray-700">${item.time}</td>
+              <td class="p-2 text-gray-700">${item.focus}</td>
+            </tr>
+          `;
+        }).join('');
+        
+        document.querySelectorAll('.workout-toggle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.index, 10);
+            toggleWorkoutItem(idx);
+          });
+        });
+      }
+      
+      function toggleWorkoutItem(index) {
+        const workoutChecklist = getWorkoutChecklistForDay(state.currentDay);
+        workoutChecklist[index] = !workoutChecklist[index];
+        persistState();
+        renderWorkoutTable();
+        renderChecklist();
+      }
+      
+      function renderHistory() {
+        const container = document.getElementById('historyContainer');
+        const logs = state.logs;
+        document.getElementById('logCount').textContent = `${logs.length} logs`;
+        
+        if (logs.length === 0) {
+          container.innerHTML = '';
+          document.getElementById('emptyHistoryMsg').classList.remove('hidden');
+        } else {
+          document.getElementById('emptyHistoryMsg').classList.add('hidden');
+          const sorted = [...logs].reverse();
+          container.innerHTML = sorted.map(log => {
+            const weightStr = log.weight ? `${log.weight}kg` : '—';
+            const energyStr = log.energy ? `${log.energy}/10` : '—';
+            const reflection = log.reflection || 'no note';
+            const completedPct = log.completed !== undefined ? `${log.completed}/${SCHEDULE_ITEMS.length}` : '—';
+            return `
+              <div class="bg-gray-50 border-2 border-gray-300 rounded-xl px-3 py-2 text-xs">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-bold text-black">Day ${log.day}</span>
+                  <span class="text-gray-600 font-semibold">📋 ${completedPct} done</span>
+                </div>
+                <div class="flex justify-between text-gray-800">
+                  <span>⚖️ ${weightStr}</span>
+                  <span>⚡ ${energyStr}</span>
+                </div>
+                <p class="text-gray-700 italic mt-1">"${reflection}"</p>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+      
+      function updateAllUI() {
+        updateDayCounterAndProgress();
+        updateWeightTracker();
+        renderChecklist();
+        renderWorkoutTable();
+        renderHistory();
+        const lastLog = state.logs.length > 0 ? state.logs[state.logs.length-1] : null;
+        if (lastLog) {
+          document.getElementById('weightInput').value = lastLog.weight || '';
+          document.getElementById('energySlider').value = lastLog.energy || 5;
+          document.getElementById('energyValue').textContent = lastLog.energy || 5;
+          document.getElementById('reflectionInput').value = lastLog.reflection || '';
+        }
+      }
+      
+      function saveTodayEntry() {
+        const day = state.currentDay;
+        const weightInput = parseFloat(document.getElementById('weightInput').value);
+        const energy = parseInt(document.getElementById('energySlider').value, 10);
+        const reflection = document.getElementById('reflectionInput').value.trim();
+        
+        if (isNaN(weightInput) || weightInput <= 0) {
+          alert('Please enter a valid weight (kg).');
+          return;
+        }
+        
+        const checklist = getChecklistForDay(day);
+        const completed = checklist.filter(v => v).length;
+        
+        const entry = {
+          day: day,
+          weight: weightInput,
+          energy: energy,
+          reflection: reflection,
+          completed: completed,
+          date: new Date().toISOString()
+        };
+        
+        state.logs = state.logs.filter(log => log.day !== day);
+        state.logs.push(entry);
+        
+        persistState();
+        updateAllUI();
+        alert(`Day ${day} saved! Weight: ${weightInput}kg, Energy: ${energy}/10.`);
+      }
+      
+      function goToNextDay() {
+        if (state.currentDay < TOTAL_DAYS) {
+          state.currentDay += 1;
+          persistState();
+          updateAllUI();
+        } else {
+          alert('You have completed the 120-day Winter Arc! 🏆');
+        }
+      }
+      
+      function init() {
+        loadState();
+        updateAllUI();
+        
+        const energySlider = document.getElementById('energySlider');
+        const energyValueSpan = document.getElementById('energyValue');
+        energySlider.addEventListener('input', () => {
+          energyValueSpan.textContent = energySlider.value;
+        });
+        
+        document.getElementById('saveEntryBtn').addEventListener('click', saveTodayEntry);
+        
+        document.getElementById('resetDayBtn').addEventListener('click', () => {
+          if (confirm('Reset all checklists for current day?')) {
+            state.checklist[state.currentDay] = new Array(SCHEDULE_ITEMS.length).fill(false);
+            state.workoutChecklist[state.currentDay] = new Array(WORKOUT_ITEMS.length).fill(false);
+            persistState();
+            renderChecklist();
+            renderWorkoutTable();
+          }
+        });
+        
+        const header = document.querySelector('header');
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→ next day';
+        nextBtn.className = 'mt-3 text-xs bg-white hover:bg-gray-100 border-2 border-black px-4 py-1.5 rounded-full text-black font-bold transition';
+        nextBtn.addEventListener('click', goToNextDay);
+        header.appendChild(nextBtn);
+      }
+      
+      init();
+    })();
+  </script>
+</body>
+</html>
